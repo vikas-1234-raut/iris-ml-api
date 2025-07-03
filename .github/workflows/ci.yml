@@ -1,13 +1,42 @@
-name: Simple CI Example
+name: Iris ML Prediction CI
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  hello-world:
+  test-iris-model:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Say Hello
-        run: echo "👋 Hello from CI! This is a simple pipeline."
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: 🚀 Start Flask App (in background)
+        run: |
+          nohup python app.py > flask.log 2>&1 &
+          sleep 10  # Give Flask time to start
+
+      - name: 🧪 Test Iris Prediction Endpoint
+        run: |
+          echo "📤 Sending test request to /predict..."
+          RESPONSE=$(curl -s -X POST http://127.0.0.1:5000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"sepal_length": 5.1, "sepal_width": 3.5, "petal_length": 1.4, "petal_width": 0.2}')
+          echo "🔁 Response: $RESPONSE"
+          echo "$RESPONSE" | grep -E "setosa|versicolor|virginica"
+
+      - name: 📄 Show Flask Logs on Failure
+        if: failure()
+        run: cat flask.log
