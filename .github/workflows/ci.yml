@@ -10,7 +10,7 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-        os: [ windows-latest]
+        os: [ ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -32,16 +32,18 @@ jobs:
           echo "Waiting for Flask to start..."
           sleep 15
 
-      - name: 🧪 Test Iris prediction API on Windows
+      - name: 🧪 Test Iris prediction API
         run: |
-          Write-Host "Sending test request..."
-          $headers = @{ "Content-Type" = "application/json" }
-          $body = '{"sepal_length":5.1,"sepal_width":3.5,"petal_length":1.4,"petal_width":0.2}'
-          $response = Invoke-RestMethod -Uri http://127.0.0.1:5000/predict -Method Post -Headers $headers -Body $body
-          Write-Host "Response: $response"
-          if ($response.predicted_species -match "setosa|versicolor|virginica") {
-            Write-Host "✅ Prediction successful"
-          } else {
-            Write-Error "❌ Invalid response"
-            exit 1
-          }
+          echo "Sending test request..."
+          RESPONSE=$(curl -s -X POST http://127.0.0.1:5000/predict \
+            -H "Content-Type: application/json" \
+            -d "{\"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2}")
+          
+          echo "Response: $RESPONSE"
+          
+          # Check if it contains 'setosa' or any species name
+          echo "$RESPONSE" | grep -E "setosa|versicolor|virginica"
+
+      - name: 📄 Show Flask logs if failed
+        if: failure()
+        run: cat flask_output.log
