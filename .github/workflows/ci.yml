@@ -27,12 +27,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 🧪 Run Flask app and test
+      - name: 🚀 Start Flask server
         run: |
           nohup python app.py > flask_output.log 2>&1 &
-          echo "Waiting for Flask app to start..."
+          echo "Waiting for Flask to start..."
           sleep 15
-          curl -X POST http://127.0.0.1:5000/predict -H "Content-Type: application/json" -d "{\"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2}"
+
+      - name: 🧪 Test Iris prediction API
+        run: |
+          echo "Sending test request..."
+          RESPONSE=$(curl -s -X POST http://127.0.0.1:5000/predict \
+            -H "Content-Type: application/json" \
+            -d "{\"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2}")
+          
+          echo "Response: $RESPONSE"
+          
+          # Check if it contains 'setosa' or any species name
+          echo "$RESPONSE" | grep -E "setosa|versicolor|virginica"
 
       - name: 📄 Show Flask logs if failed
         if: failure()
