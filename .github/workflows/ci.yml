@@ -1,43 +1,13 @@
-name: Test CI Pipeline
+name: Simple CI Example
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  
+
 jobs:
-  build-and-test:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+  hello-world:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
-
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: 📦 Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: 🚀 Start Flask server
-        run: |
-          nohup python app.py > flask_output.log 2>&1 &
-          echo "Waiting for Flask to start..."
-          sleep 15
-
-      - name: 🧪 Test Iris prediction API
-        RESPONSE=$(curl -s -X POST http://127.0.0.1:5000/predict \
-          -H "Content-Type: application/json" \
-          -d "{\"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2}")
-
-
-      - name: 📄 Show Flask logs if failed
-        if: failure()
-        run: cat flask_output.log
+      - name: Say Hello
+        run: echo "👋 Hello from CI! This is a simple pipeline."
